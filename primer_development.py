@@ -69,8 +69,8 @@ def read_fasta_alignment(lines):
 
 # ユーザーが閾値をスライダーで設定可能に
 st.sidebar.header("プライマー条件設定")
-min_tm = st.sidebar.slider("最小Tm値 (℃)", 40, 80, 55)
-max_tm = st.sidebar.slider("最大Tm値 (℃)", 40, 80, 65)
+min_tm = st.sidebar.slider("最小Tm値 (℃)", 0, 100, 55)
+max_tm = st.sidebar.slider("最大Tm値 (℃)", 0, 100, 65)
 min_gc = st.sidebar.slider("最小GC含有率 (%)", 0, 100, 40)
 max_gc = st.sidebar.slider("最大GC含有率 (%)", 0, 100, 60)
 min_len = st.sidebar.slider("最小塩基長", 0, 100, 20)
