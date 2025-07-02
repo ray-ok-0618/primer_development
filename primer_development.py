@@ -140,7 +140,7 @@ def analyze_block(sequences, block_num=1):
                         candidates.append((start + 1, start + window_size, primer_seq, tm, gc, fullmatch_count))
 
     if candidates:
-        st.subheader(f"プライマー候補領域 ブロック{block_num}（開始-終了 : 配列 (Tm℃, GC%, 完全一致塩基数)）")
+        st.subheader(f"プライマー候補領域（開始-終了 : 配列 (Tm℃, GC%, 完全一致塩基数)）")
         for start_pos, end_pos, seq, tm, gc, fullmatch_count in candidates:
             st.text(f"{start_pos}-{end_pos}: {seq} (Tm={tm:.1f}℃, GC={gc:.1f}%, 完全一致塩基数={fullmatch_count})")
     else:
