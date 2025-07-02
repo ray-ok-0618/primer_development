@@ -111,8 +111,6 @@ def analyze_block(sequences, block_num=1):
 
     consensus_str = ''.join(consensus_seq)
 
-    min_len = 20
-    max_len = 30
     threshold = 0.8
 
     candidates = []
