@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.title("FASTA対応プライマー候補探索ツール（TM・GC・完全一致重視・閾値調整可能）")
+st.title("FASTA対応プライマー候補配列探索ツール（TM・GC・完全一致重視・閾値調整可能）")
 
 iupac_dict = {
     frozenset(['A']): 'A',
@@ -78,16 +78,16 @@ max_len = st.sidebar.slider("最大塩基長", 0, 100, 30)
 
 def analyze_block(sequences, block_num=1):
     if len(sequences) == 0:
-        st.write(f"--- ブロック{block_num}：配列なし ---")
+        st.write(f"--- 配列なし ---")
         return
 
     length_set = set(len(seq) for seq in sequences)
     if len(length_set) != 1:
-        st.warning(f"ブロック{block_num}: 配列長が揃っていません。処理を中止します。")
+        st.warning(f"配列長が揃っていません。処理を中止します。")
         return
 
     seq_len = length_set.pop()
-    st.write(f"### ブロック {block_num}: 配列数={len(sequences)}, 配列長={seq_len}")
+    st.write(f"### 配列数={len(sequences)}, 配列長={seq_len}")
 
     max_rates = []
     consensus_seq = []
@@ -144,7 +144,7 @@ def analyze_block(sequences, block_num=1):
         for start_pos, end_pos, seq, tm, gc, fullmatch_count in candidates:
             st.text(f"{start_pos}-{end_pos}: {seq} (Tm={tm:.1f}℃, GC={gc:.1f}%, 完全一致塩基数={fullmatch_count})")
     else:
-        st.write(f"ブロック{block_num}で条件に合うプライマー候補領域が見つかりませんでした。")
+        st.write(f"条件に合うプライマー候補領域が見つかりませんでした。")
 
 uploaded_file = st.file_uploader("FASTA形式アライメントファイルをアップロード（utf-8）", type=["fa", "fasta", "txt"])
 
