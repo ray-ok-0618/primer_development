@@ -73,6 +73,8 @@ min_tm = st.sidebar.slider("最小Tm値 (℃)", 40, 80, 55)
 max_tm = st.sidebar.slider("最大Tm値 (℃)", 40, 80, 65)
 min_gc = st.sidebar.slider("最小GC含有率 (%)", 0, 100, 40)
 max_gc = st.sidebar.slider("最大GC含有率 (%)", 0, 100, 60)
+min_len = st.sidebar.slider("最小塩基長", 0, 100, 20)
+max_len = st.sidebar.slider("最大塩基長", 0, 100, 30)
 
 def analyze_block(sequences, block_num=1):
     if len(sequences) == 0:
