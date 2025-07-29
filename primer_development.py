@@ -33,13 +33,32 @@ def calc_base_frequencies(sequences, pos):
         freq[b] = bases.count(b) / total
     return freq
 
-def calc_tm_wallace(seq):
-    seq = seq.upper()
-    A = seq.count('A')
-    T = seq.count('T')
-    G = seq.count('G')
-    C = seq.count('C')
-    return 2 * (A + T) + 4 * (G + C)
+def calculate_tm_with_iupac(seq):
+    base_weights = {
+        # A, T, G, C の重み
+        'A': (1, 0, 0, 0), 'T': (0, 1, 0, 0), 'G': (0, 0, 1, 0), 'C': (0, 0, 0, 1),
+        'R': (0.5, 0, 0.5, 0), 'Y': (0, 0.5, 0, 0.5),
+        'S': (0, 0, 0.5, 0.5), 'W': (0.5, 0.5, 0, 0),
+        'K': (0, 0.5, 0.5, 0), 'M': (0.5, 0, 0, 0.5),
+        'B': (0, 1/3, 1/3, 1/3), 'D': (1/3, 1/3, 1/3, 0),
+        'H': (1/3, 1/3, 0, 1/3), 'V': (1/3, 0, 1/3, 1/3),
+        'N': (0.25, 0.25, 0.25, 0.25)
+    }
+
+    A = T = G = C = 0.0
+
+    for base in seq.upper():
+        if base not in base_weights:
+            continue
+        a, t, g, c = base_weights[base]
+        A += a
+        T += t
+        G += g
+        C += c
+
+    tm = 2 * (A + T) + 4 * (G + C)
+    return round(tm, 1)
+
 
 def calc_gc_content(seq):
     seq = seq.upper()
