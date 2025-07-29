@@ -156,7 +156,7 @@ def analyze_block(sequences, block_num=1):
     if candidates:
         st.subheader(f"プライマー候補領域（開始-終了 : 配列 (Tm℃, GC%, 完全一致率)）")
         for start_pos, end_pos, seq, tm, gc, fullmatch_count in candidates:
-            st.text(f"{start_pos}-{end_pos}: {seq} (Tm={tm:.1f}℃, GC={gc:.1f}%, 完全一致率={fullmatch_count*100/(end_pos-start_pos+1)})")
+            st.text(f"{start_pos}-{end_pos}: {seq} (Tm={tm:.1f}℃, GC={gc:.1f}%, 完全一致率={fullmatch_count*100/(end_pos-start_pos+1):.1f})")
     else:
         st.write(f"条件に合うプライマー候補領域が見つかりませんでした。")
 
