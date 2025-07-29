@@ -94,6 +94,7 @@ min_gc = st.sidebar.slider("最小GC含有率 (%)", 0, 100, 40)
 max_gc = st.sidebar.slider("最大GC含有率 (%)", 0, 100, 60)
 min_len = st.sidebar.slider("最小塩基長", 0, 100, 20)
 max_len = st.sidebar.slider("最大塩基長", 0, 100, 30)
+fr = st.sidebar.slider("完全一致率", 0, 100, 90)
 
 def analyze_block(sequences, block_num=1):
     if len(sequences) == 0:
@@ -148,15 +149,15 @@ def analyze_block(sequences, block_num=1):
                 primer_seq = consensus_str[start:start + window_size]
                 tm = calculate_tm_with_iupac(primer_seq)
                 gc = calc_gc_content(primer_seq)
+                fullmatch_count = sum(1 for rate in window_rates if rate == 1.0)*100/len(primer_seq)
 
-                if min_tm <= tm <= max_tm and min_gc <= gc <= max_gc:
-                    fullmatch_count = sum(1 for rate in window_rates if rate == 1.0)
+                if min_tm <= tm <= max_tm and min_gc <= gc <= max_gc and fr <= fullmatch_count:
                     candidates.append((start + 1, start + window_size, primer_seq, tm, gc, fullmatch_count))
 
     if candidates:
         st.subheader(f"プライマー候補領域（開始-終了 : 配列 (Tm℃, GC%, 完全一致率)）")
         for start_pos, end_pos, seq, tm, gc, fullmatch_count in candidates:
-            st.text(f"{start_pos}-{end_pos}: {seq} (Tm={tm:.1f}℃, GC={gc:.1f}%, 完全一致率={fullmatch_count*100/(end_pos-start_pos+1):.1f})")
+            st.text(f"{start_pos}-{end_pos}: {seq} (Tm={tm:.1f}℃, GC={gc:.1f}%, 完全一致率={fullmatch_count*100/(end_pos-start_pos+1):.1f}%)")
     else:
         st.write(f"条件に合うプライマー候補領域が見つかりませんでした。")
 
