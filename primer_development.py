@@ -151,12 +151,7 @@ def analyze_block(sequences, block_num=1):
 
                 if min_tm <= tm <= max_tm and min_gc <= gc <= max_gc:
                     fullmatch_count = sum(1 for rate in window_rates if rate == 1.0)
-
-                    if fullmatch_count > max_fullmatch_count:
-                        max_fullmatch_count = fullmatch_count
-                        candidates = [(start + 1, start + window_size, primer_seq, tm, gc, fullmatch_count)]
-                    elif fullmatch_count == max_fullmatch_count:
-                        candidates.append((start + 1, start + window_size, primer_seq, tm, gc, fullmatch_count))
+                    candidates.append((start + 1, start + window_size, primer_seq, tm, gc, fullmatch_count))
 
     if candidates:
         st.subheader(f"プライマー候補領域（開始-終了 : 配列 (Tm℃, GC%, 完全一致塩基数)）")
