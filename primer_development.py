@@ -146,7 +146,7 @@ def analyze_block(sequences, block_num=1):
                     continue
 
                 primer_seq = consensus_str[start:start + window_size]
-                tm = calc_tm_wallace(primer_seq)
+                tm = calculate_tm_with_iupac(primer_seq)
                 gc = calc_gc_content(primer_seq)
 
                 if min_tm <= tm <= max_tm and min_gc <= gc <= max_gc:
