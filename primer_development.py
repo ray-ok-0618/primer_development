@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.title("FASTA対応プライマー候補配列探索ツール（完全一致重視）")
+st.title("FASTA対応プライマー候補配列探索ツール")
 
 iupac_dict = {
     frozenset(['A']): 'A',
