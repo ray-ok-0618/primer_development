@@ -176,6 +176,5 @@ if uploaded_file is not None:
         else:
             with st.status("処理中...", expanded=True) as status:
     # 処理中の内容など表示したければここに書く
-                st.write("一致率を計算中です")
                 analyze_block(sequences, 1)
                 status.update(label="完了しました", state="complete")
