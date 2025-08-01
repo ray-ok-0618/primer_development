@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.title("FASTA対応プライマー候補配列探索ツール")
+st.title("FASTA 対応プライマー候補配列探索ツール")
 
 iupac_dict = {
     frozenset(['A']): 'A',
@@ -131,7 +131,7 @@ def analyze_block(sequences, block_num=1):
 
     consensus_str = ''.join(consensus_seq)
 
-    threshold = 0.8
+    threshold = 0
 
     candidates = []
     max_fullmatch_count = 0
