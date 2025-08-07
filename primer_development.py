@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.title("FASTA 対応プライマー候補配列探索ツール")
+st.title("FASTA対応プライマー候補配列探索ツール")
 
 iupac_dict = {
     frozenset(['A']): 'A',
@@ -67,6 +67,13 @@ def calc_gc_content(seq):
     if length == 0:
         return 0
     return (gc_count / length) * 100
+
+def get_base_frequencies_at_positions(sequences, start, end):
+    position_frequencies = []
+    for i in range(start, end):
+        freq = calc_base_frequencies(sequences, i)
+        position_frequencies.append(freq)
+    return position_frequencies
 
 def read_fasta_alignment(lines):
     sequences = []
@@ -158,6 +165,18 @@ def analyze_block(sequences, block_num=1):
         st.subheader(f"プライマー候補領域（開始-終了 : 配列 (Tm℃, GC%, 完全一致率)）")
         for start_pos, end_pos, seq, tm, gc, fullmatch_count in candidates:
             st.text(f"{start_pos}-{end_pos}: {seq} (Tm={tm:.1f}℃, GC={gc:.1f}%, 完全一致率={fullmatch_count:.1f}%)")
+            # 混合塩基がある位置の塩基割合を表示
+            freqs = get_base_frequencies_at_positions(sequences, start_pos - 1, end_pos)
+            iupac_positions = []
+            for i, base in enumerate(seq):
+                if base not in ['A', 'T', 'G', 'C']:
+                    freq = freqs[i]
+                    if freq:
+                        detail = ', '.join([f"{b}...{round(r*100,1)}%" for b, r in freq.items()])
+                        iupac_positions.append(f"{base} : {detail}")
+            if iupac_positions:
+                for detail in iupac_positions:
+                    st.write(f"　　  {detail}")
     else:
         st.write(f"条件に合うプライマー候補領域が見つかりませんでした。")
 
