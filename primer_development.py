@@ -1,6 +1,8 @@
 import streamlit as st
+import math
+import itertools
 
-st.title("FASTA対応プライマー候補配列探索ツール")
+st.title("FASTA対応診断用プライマー候補配列探索ツール")
 
 iupac_dict = {
     frozenset(['A']): 'A',
@@ -20,6 +22,8 @@ iupac_dict = {
     frozenset(['A', 'C', 'G', 'T']): 'N'
 }
 
+iupac_reversed_dict = {v: k for k, v in iupac_dict.items()}
+
 def get_iupac(bases):
     return iupac_dict.get(frozenset(bases), 'N')
 
@@ -33,33 +37,6 @@ def calc_base_frequencies(sequences, pos):
         freq[b] = bases.count(b) / total
     return freq
 
-def calculate_tm_with_iupac(seq):
-    base_weights = {
-        # A, T, G, C の重み
-        'A': (1, 0, 0, 0), 'T': (0, 1, 0, 0), 'G': (0, 0, 1, 0), 'C': (0, 0, 0, 1),
-        'R': (0.5, 0, 0.5, 0), 'Y': (0, 0.5, 0, 0.5),
-        'S': (0, 0, 0.5, 0.5), 'W': (0.5, 0.5, 0, 0),
-        'K': (0, 0.5, 0.5, 0), 'M': (0.5, 0, 0, 0.5),
-        'B': (0, 1/3, 1/3, 1/3), 'D': (1/3, 1/3, 1/3, 0),
-        'H': (1/3, 1/3, 0, 1/3), 'V': (1/3, 0, 1/3, 1/3),
-        'N': (0.25, 0.25, 0.25, 0.25)
-    }
-
-    A = T = G = C = 0.0
-
-    for base in seq.upper():
-        if base not in base_weights:
-            continue
-        a, t, g, c = base_weights[base]
-        A += a
-        T += t
-        G += g
-        C += c
-
-    tm = 2 * (A + T) + 4 * (G + C)
-    return round(tm, 1)
-
-
 def calc_gc_content(seq):
     seq = seq.upper()
     gc_count = seq.count('G') + seq.count('C')
@@ -67,6 +44,51 @@ def calc_gc_content(seq):
     if length == 0:
         return 0
     return (gc_count / length) * 100
+    
+def calculate_tm_with_iupac(seq):
+    
+    parameter = {
+    'AA':[-7.9, -22.2],
+    'TT':[-7.9, -22.2],
+    'AT':[-7.2, -20.4],
+    'TA':[-7.2, -21.3],
+    'CA':[-8.5, -22.7],
+    'TG':[-8.5, -22.7],
+    'GT':[-8.4, -22.4],
+    'AC':[-8.4, -22.4],
+    'CT':[-7.8, -21.0],
+    'AG':[-7.8, -21.0],
+    'GA':[-8.2, -22.2],
+    'TC':[-8.2, -22.2],
+    'CG':[-10.6, -27.2],
+    'GC':[-9.8, -24.4],
+    'GG':[-8.0, -19.9],
+    'CC':[-8.0, -19.9]
+        }
+    
+    expanded = [iupac_reversed_dict[base] for base in seq]
+    expanded_seq = [''.join(codon) for codon in itertools.product(*expanded)]
+    tm_range = []
+
+    for i in expanded_seq:
+        pair = [i[j:j+2] for j in range(len(i)-1)]
+        sumH = sum([parameter[i][0] for i in pair]) 
+        sumS = sum([parameter[i][1] for i in pair])
+        gc_content = calc_gc_content(i)/100
+        if i[0] in ['G', 'C']:
+            ini_H = 0.1
+            ini_S = -2.8
+        elif i[0] in ['A', 'T']:
+            ini_H = 2.3
+            ini_S = 4.1
+        tm_format = (1000*(sumH+ini_H)/(ini_S+sumS+1.987*math.log(primer_molar)))
+        ln_m = math.log(salt_molar)
+        correction = ((4.29 * gc_content - 3.95) * ln_m + 0.94 * (ln_m ** 2)) * 1e-5
+        tm_corrected = round(tm_format/(1 + correction*tm_format) - 273.15, 1)
+        tm_range.append(tm_corrected)
+
+    return [min(tm_range), max(tm_range)]
+
 
 def get_base_frequencies_at_positions(sequences, start, end):
     position_frequencies = []
@@ -102,6 +124,8 @@ max_gc = st.sidebar.slider("最大GC含有率 (%)", 0, 100, 60)
 min_len = st.sidebar.slider("最小塩基長", 0, 100, 20)
 max_len = st.sidebar.slider("最大塩基長", 0, 100, 30)
 fr = st.sidebar.slider("完全一致率", 0, 100, 90)
+primer_molar = st.number_input('primer濃度(nM)', value=500) * 1e-9
+salt_molar = st.number_input('塩濃度(mM)', value=50) * 1e-3
 
 def analyze_block(sequences, block_num=1):
     if len(sequences) == 0:
@@ -138,16 +162,16 @@ def analyze_block(sequences, block_num=1):
 
     consensus_str = ''.join(consensus_seq)
 
-    threshold = 0
+    threshold = 1.0
 
     candidates = []
-    max_fullmatch_count = 0
+    progress_bar = st.progress(0)
 
     for window_size in range(min_len, max_len + 1):
         for start in range(seq_len - window_size + 1):
             window_rates = max_rates[start:start + window_size]
             high_rate_count = sum(r >= threshold for r in window_rates)
-            if high_rate_count >= window_size * 0.9:
+            if high_rate_count >= window_size * fr * 1e-2:
                 # ギャップ含む配列除外
                 has_gap = any('-' in seq[start:start + window_size] for seq in sequences)
                 if has_gap:
@@ -158,13 +182,15 @@ def analyze_block(sequences, block_num=1):
                 gc = calc_gc_content(primer_seq)
                 fullmatch_count = sum(1 for rate in window_rates if rate == 1.0)*100/len(primer_seq)
 
-                if min_tm <= tm <= max_tm and min_gc <= gc <= max_gc and fr <= fullmatch_count:
+                if min_tm <= tm[0] and tm[1] <= max_tm and min_gc <= gc <= max_gc and fr <= fullmatch_count:
                     candidates.append((start + 1, start + window_size, primer_seq, tm, gc, fullmatch_count))
+        progress_bar.progress(min(((window_size - min_len + 1)/(max_len - min_len + 1), 1.0)))
 
     if candidates:
         st.subheader(f"プライマー候補領域（開始-終了 : 配列 (Tm℃, GC%, 完全一致率)）")
-        for start_pos, end_pos, seq, tm, gc, fullmatch_count in candidates:
-            st.text(f"{start_pos}-{end_pos}: {seq} (Tm={tm:.1f}℃, GC={gc:.1f}%, 完全一致率={fullmatch_count:.1f}%)")
+        sorted_candidates = sorted(candidates, key=lambda x: x[0])
+        for start_pos, end_pos, seq, tm, gc, fullmatch_count in sorted_candidates:
+            st.text(f"{start_pos}-{end_pos}: {seq} (Tm={tm[0]}-{tm[1]}℃, GC={gc:.1f}%, 完全一致率={fullmatch_count:.1f}%)")
             # 混合塩基がある位置の塩基割合を表示
             freqs = get_base_frequencies_at_positions(sequences, start_pos - 1, end_pos)
             iupac_positions = []
@@ -177,6 +203,7 @@ def analyze_block(sequences, block_num=1):
             if iupac_positions:
                 for detail in iupac_positions:
                     st.write(f"　　  {detail}")
+            
     else:
         st.write(f"条件に合うプライマー候補領域が見つかりませんでした。")
 
