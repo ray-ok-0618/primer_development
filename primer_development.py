@@ -124,7 +124,7 @@ max_gc = st.sidebar.slider("最大GC含有率 (%)", 0, 100, 60)
 min_len = st.sidebar.slider("最小塩基長", 0, 100, 20)
 max_len = st.sidebar.slider("最大塩基長", 0, 100, 30)
 fr = st.sidebar.slider("完全一致率", 0, 100, 90)
-primer_molar = st.number_input('primer濃度(nM)', value=500) * 1e-9
+primer_molar = st.number_input('primer濃度(nM)', value=200) * 1e-9
 salt_molar = st.number_input('塩濃度(mM)', value=50) * 1e-3
 
 def analyze_block(sequences, block_num=1):
@@ -224,3 +224,4 @@ if uploaded_file is not None:
     # 処理中の内容など表示したければここに書く
                 analyze_block(sequences, 1)
                 status.update(label="完了しました", state="complete")
+
